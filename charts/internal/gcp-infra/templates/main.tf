@@ -106,11 +106,11 @@ data "google_compute_address" "{{ $natIP }}" {
 {{end}}
 {{- end }}
 
-{{ if .Values.networks.internal -}}
+{{ if .Values.networks.internal.cidr -}}
 resource "google_compute_subnetwork" "subnetwork-internal" {
   name          = "{{ required "clusterName is required" .Values.clusterName }}-internal"
-  ip_cidr_range = "{{ required "networks.internal is required" .Values.networks.internal }}"
-  network       = {{ required "vpc.name is required" .Values.vpc.name }}
+  ip_cidr_range = "{{ required "networks.internal.cidr is required" .Values.networks.internal.cidr }}"
+  network       = "{{ required "vpc.name is required" .Values.vpc.name }}"
   region        = "{{ required "google.region is required" .Values.google.region }}"
 
   timeouts {
@@ -248,7 +248,7 @@ output "{{ .Values.outputKeys.serviceAccountEmail }}" {
 output "{{ .Values.outputKeys.subnetNodes }}" {
   value = google_compute_subnetwork.subnetwork-nodes.name
 }
-{{ if .Values.networks.internal -}}
+{{ if .Values.networks.internal.cidr -}}
 output "{{ .Values.outputKeys.subnetInternal }}" {
   value = google_compute_subnetwork.subnetwork-internal.name
 }

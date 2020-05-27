@@ -33,7 +33,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 		pods        = "100.96.0.0/11"
 		services    = "100.64.0.0/13"
 		nodes       = "10.250.0.0/16"
-		internal    = "10.10.0.0/24"
+		cidr        = "10.10.0.0/24"
 		invalidCIDR = "invalid-cidr"
 
 		fldPath *field.Path
@@ -59,9 +59,11 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					Metadata:            pointer.StringPtr("INCLUDE_ALL_METADATA"),
 					FlowSampling:        pointer.Float32Ptr(0.4),
 				},
-				Internal: &internal,
-				Workers:  "10.250.0.0/16",
-				Worker:   "10.250.0.0/16",
+				Internal: &apisgcp.Internal{
+					CIDR: &cidr,
+				},
+				Workers: "10.250.0.0/16",
+				Worker:  "10.250.0.0/16",
 			},
 		}
 	})
@@ -82,13 +84,13 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 			It("should forbid invalid internal CIDR", func() {
 				invalidCIDR = "invalid-cidr"
-				infrastructureConfig.Networks.Internal = &invalidCIDR
+				infrastructureConfig.Networks.Internal.CIDR = &invalidCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services, fldPath)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.internal"),
+					"Field":  Equal("networks.internal.cidr"),
 					"Detail": Equal("invalid CIDR address: invalid-cidr"),
 				}))
 			})
@@ -107,18 +109,18 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 			It("should forbid Internal CIDR to overlap with Node - and Worker CIDR", func() {
 				overlappingCIDR := "10.250.1.0/30"
-				infrastructureConfig.Networks.Internal = &overlappingCIDR
+				infrastructureConfig.Networks.Internal.CIDR = &overlappingCIDR
 				infrastructureConfig.Networks.Workers = overlappingCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &overlappingCIDR, &pods, &services, fldPath)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.internal"),
+					"Field":  Equal("networks.internal.cidr"),
 					"Detail": Equal(`must not be a subset of "" ("10.250.1.0/30")`),
 				}, Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.internal"),
+					"Field":  Equal("networks.internal.cidr"),
 					"Detail": Equal(`must not be a subset of "networks.workers" ("10.250.1.0/30")`),
 				}))
 			})
@@ -128,7 +130,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				podCIDR := "100.96.0.4/11"
 				serviceCIDR := "100.64.0.5/13"
 				internal := "10.10.0.4/24"
-				infrastructureConfig.Networks.Internal = &internal
+				infrastructureConfig.Networks.Internal.CIDR = &internal
 				infrastructureConfig.Networks.Workers = "10.250.3.8/24"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodeCIDR, &podCIDR, &serviceCIDR, fldPath)
@@ -136,7 +138,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				Expect(errorList).To(HaveLen(2))
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.internal"),
+					"Field":  Equal("networks.internal.cidr"),
 					"Detail": Equal("must be valid canonical CIDR"),
 				}, Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -145,10 +147,29 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				}))
 			})
 		})
+		Context("Internal", func() {
+			It("should allow providing an internal subnet when vpc is specified", func() {
+				subnetName := "my-subnet"
+				infrastructureConfig.Networks.Internal = &apisgcp.Internal{Name: &subnetName}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services, fldPath)
+				Expect(errorList).To(BeEmpty())
+			})
+			It("should forbid providing a internal subnet without specifing a vpc", func() {
+				subnetName := "my-subnet"
+				infrastructureConfig.Networks.VPC = nil
+				infrastructureConfig.Networks.Internal = &apisgcp.Internal{Name: &subnetName}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services, fldPath)
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("networks.vpc"),
+					"Detail": Equal("vpc must be specified when providing internal subnet"),
+				}))
+			})
+		})
 		Context("VPC", func() {
 			var testInfrastructureConfig = &apisgcp.InfrastructureConfig{
 				Networks: apisgcp.NetworkConfig{
-					Internal: &internal,
+					Internal: &apisgcp.Internal{CIDR: &cidr},
 					Workers:  "10.250.0.0/16",
 				},
 			}
@@ -336,7 +357,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			}
 			newInfrastructureConfig.Networks.Workers = "10.96.0.0/16"
 			newInfrastructureConfig.Networks.Worker = "10.96.0.0/16"
-			newInfrastructureConfig.Networks.Internal = pointer.StringPtr("10.96.0.0/16")
+			*newInfrastructureConfig.Networks.Internal.CIDR = "10.96.0.0/16"
 
 			errorList := ValidateInfrastructureConfigUpdate(infrastructureConfig, newInfrastructureConfig, fldPath)
 			Expect(errorList).To(ConsistOfFields(Fields{
@@ -353,7 +374,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				"Field": Equal("networks.worker"),
 			}, Fields{
 				"Type":  Equal(field.ErrorTypeInvalid),
-				"Field": Equal("networks.internal"),
+				"Field": Equal("networks.internal.cidr"),
 			}))
 		})
 

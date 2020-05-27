@@ -18,7 +18,9 @@ networks:
     minPortsPerVM: 2048
 #   natIPNames: ["manualnat1", "manualnat2"]
   workers: 10.250.0.0/19
-# internal: 10.250.112.0/22
+# internal:
+#   cidr: 10.250.112.0/22
+#   name: "subnet-name-in-myvpc"
 # flowLogs:
 #   aggregationInterval: "INTERVAL_10_MIN"
 #   flowSampling: 0.2

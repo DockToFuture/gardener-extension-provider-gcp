@@ -37,9 +37,9 @@ type NetworkConfig struct {
 	// CloudNAT contains configuration about the the CloudNAT resource
 	// +optional
 	CloudNAT *CloudNAT `json:"cloudNAT,omitempty"`
-	// Internal is a private subnet (used for internal load balancers).
+	// Internal contains the configuration for internal load balancer.
 	// +optional
-	Internal *string `json:"internal,omitempty"`
+	Internal *Internal `json:"internal,omitempty"`
 	// Worker is the worker subnet range to create (used for the VMs).
 	// Deprecated - use `workers` instead.
 	Worker string `json:"worker"`
@@ -143,4 +143,23 @@ type FlowLogs struct {
 	// Metadata configures whether metadata fields should be added to the reported VPC flow logs.
 	// +optional
 	Metadata *string `json:"metadata,omitempty"`
+}
+
+// Internal contains the configuration for internal load balancer.
+type Internal struct {
+	// CIDR is a IP address range for a subnet which will be created and used for internal load balancers.
+	// +optional
+	CIDR *string `json:"cidr,omitempty"`
+	// Name takes the name of a manual created subnet which will be used for internal load balancers.
+	// +optional
+	Name *string `json:"name,omitempty"`
+	// InternalOnly struct contains configuration for enabling or disabling internal loadbalancer validation
+	// +optional
+	InternalOnly *InternalOnly `json:"internalOnly,omitempty"`
+}
+
+// InternalOnly contains configuration for enabling or disabling internal loadbalancer validation
+type InternalOnly struct {
+	// Enabled flag specifies wheter validation for internal loadbalancer is enabled or not
+	Enabled bool `json:"enabled"`
 }

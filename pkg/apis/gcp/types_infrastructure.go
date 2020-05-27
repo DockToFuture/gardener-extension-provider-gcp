@@ -35,8 +35,8 @@ type NetworkConfig struct {
 	VPC *VPC
 	// CloudNAT contains configuration about the the CloudNAT resource
 	CloudNAT *CloudNAT
-	// Internal is a private subnet (used for internal load balancers).
-	Internal *string
+	// Internal contains the configuration for internal load balancer.
+	Internal *Internal
 	// Worker is the worker subnet range to create (used for the VMs).
 	// Deprecated - use `workers` instead.
 	Worker string
@@ -132,4 +132,20 @@ type FlowLogs struct {
 	FlowSampling *float32
 	// Metadata configures whether metadata fields should be added to the reported VPC flow logs.
 	Metadata *string
+}
+
+// Internal contains the configuration for internal load balancer.
+type Internal struct {
+	// CIDR is a IP address range for a subnet which will be created and used for internal load balancers.
+	CIDR *string
+	// Name takes the name of a manual created subnet which will be used for internal load balancers.
+	Name *string
+	// InternalOnly contains configuration for enabling or disabling internal loadbalancer validation
+	InternalOnly *InternalOnly
+}
+
+// InternalOnly contains configuration for enabling or disabling internal loadbalancer validation
+type InternalOnly struct {
+	// Enabled flag specifies wheter validation for internal loadbalancer is enabled or not
+	Enabled bool
 }

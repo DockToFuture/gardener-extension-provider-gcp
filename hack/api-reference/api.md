@@ -432,6 +432,93 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.Internal">Internal
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<p>
+<p>Internal contains the configuration for internal load balancer.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>cidr</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CIDR is a IP address range for a subnet which will be created and used for internal load balancers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name takes the name of a manual created subnet which will be used for internal load balancers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>internalOnly</code></br>
+<em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.InternalOnly">
+InternalOnly
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>InternalOnly struct contains configuration for enabling or disabling internal loadbalancer validation</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.InternalOnly">InternalOnly
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.Internal">Internal</a>)
+</p>
+<p>
+<p>InternalOnly contains configuration for enabling or disabling internal loadbalancer validation</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enabled flag specifies wheter validation for internal loadbalancer is enabled or not</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.MachineImage">MachineImage
 </h3>
 <p>
@@ -677,12 +764,14 @@ CloudNAT
 <td>
 <code>internal</code></br>
 <em>
-string
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.Internal">
+Internal
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Internal is a private subnet (used for internal load balancers).</p>
+<p>Internal contains the configuration for internal load balancer.</p>
 </td>
 </tr>
 <tr>

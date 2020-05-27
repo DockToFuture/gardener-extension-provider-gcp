@@ -126,7 +126,6 @@ func ComputeTerraformerChartValues(
 		"clusterName": infra.Namespace,
 		"networks": map[string]interface{}{
 			"workers":  workersCIDR,
-			"internal": config.Networks.Internal,
 			"cloudNAT": cN,
 		},
 		"outputKeys": map[string]interface{}{
@@ -137,6 +136,18 @@ func ComputeTerraformerChartValues(
 			"subnetNodes":         TerraformerOutputKeySubnetNodes,
 			"subnetInternal":      TerraformerOutputKeySubnetInternal,
 		},
+	}
+	if config.Networks.Internal != nil {
+		internal := make(map[string]interface{})
+		if config.Networks.Internal.CIDR != nil {
+			internal["cidr"] = *config.Networks.Internal.CIDR
+		}
+
+		if config.Networks.Internal.Name != nil {
+			internal["name"] = *config.Networks.Internal.Name
+		}
+
+		values["networks"].(map[string]interface{})["internal"] = internal
 	}
 
 	if config.Networks.FlowLogs != nil {
@@ -227,7 +238,7 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *api.Infrastructur
 		outputKeys = append(outputKeys, TerraformOutputKeyNATIPs)
 	}
 
-	hasInternal := config.Networks.Internal != nil
+	hasInternal := config.Networks.Internal != nil && config.Networks.Internal.CIDR != nil
 	if hasInternal {
 		outputKeys = append(outputKeys, TerraformerOutputKeySubnetInternal)
 	}

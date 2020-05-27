@@ -63,13 +63,19 @@ func ValidateInfrastructureConfig(infra *apisgcp.InfrastructureConfig, nodesCIDR
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("workers"), infra.Networks.Workers)...)
 	}
 
-	if infra.Networks.Internal != nil {
-		internalCIDR := cidrvalidation.NewCIDR(*infra.Networks.Internal, networksPath.Child("internal"))
+	if infra.Networks.Internal != nil && infra.Networks.Internal.CIDR != nil {
+		internalCIDR := cidrvalidation.NewCIDR(*infra.Networks.Internal.CIDR, networksPath.Child("internal", "cidr"))
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(internalCIDR)...)
-		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("internal"), *infra.Networks.Internal)...)
+		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("internal", "cidr"), *infra.Networks.Internal.CIDR)...)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDROverlap([]cidrvalidation.CIDR{pods, services}, []cidrvalidation.CIDR{internalCIDR}, false)...)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDROverlap([]cidrvalidation.CIDR{nodes}, []cidrvalidation.CIDR{internalCIDR}, false)...)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDROverlap([]cidrvalidation.CIDR{workerCIDR}, []cidrvalidation.CIDR{internalCIDR}, false)...)
+	}
+
+	if infra.Networks.Internal != nil && infra.Networks.Internal.Name != nil {
+		if infra.Networks.VPC == nil || len(infra.Networks.VPC.Name) == 0 {
+			allErrs = append(allErrs, field.Required(networksPath.Child("vpc"), "vpc must be specified when providing internal subnet"))
+		}
 	}
 
 	if nodes != nil {
@@ -138,7 +144,7 @@ func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *apisgcp.Infrastruc
 	if oldVPC != nil && newVPC != nil {
 		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newVPC.Name, oldVPC.Name, vpcPath.Child("name"))...)
 		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newVPC.CloudRouter, oldVPC.CloudRouter, vpcPath.Child("cloudRouter"))...)
-		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.Internal, oldConfig.Networks.Internal, networksPath.Child("internal"))...)
+		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.Internal.CIDR, oldConfig.Networks.Internal.CIDR, networksPath.Child("internal", "cidr"))...)
 		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.Workers, oldConfig.Networks.Workers, networksPath.Child("workers"))...)
 		allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.Worker, oldConfig.Networks.Worker, networksPath.Child("worker"))...)
 	}

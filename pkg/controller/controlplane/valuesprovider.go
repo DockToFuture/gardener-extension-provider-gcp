@@ -289,7 +289,13 @@ func (vp *valuesProvider) GetConfigChartValues(
 			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", kutil.ObjectName(cp))
 		}
 	}
-
+	// Decode infrastructureProviderSpec
+	shootInfraConfig := &apisgcp.InfrastructureConfig{}
+	if cluster.Shoot != nil && cluster.Shoot.Spec.Provider.InfrastructureConfig != nil {
+		if _, _, err := vp.Decoder().Decode(cluster.Shoot.Spec.Provider.InfrastructureConfig.Raw, nil, shootInfraConfig); err != nil {
+			return nil, errors.Wrapf(err, "could not decode infrastructureConfig of shoot cluster '%s'", kutil.ObjectName(cluster.Shoot))
+		}
+	}
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisgcp.InfrastructureStatus{}
 	if _, _, err := vp.Decoder().Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
@@ -303,7 +309,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	// Get config chart values
-	return getConfigChartValues(cpConfig, infraStatus, cp, serviceAccount)
+	return getConfigChartValues(cpConfig, shootInfraConfig, infraStatus, cp, serviceAccount)
 }
 
 // GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
@@ -359,12 +365,13 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 // getConfigChartValues collects and returns the configuration chart values.
 func getConfigChartValues(
 	cpConfig *apisgcp.ControlPlaneConfig,
+	shootInfraConfig *apisgcp.InfrastructureConfig,
 	infraStatus *apisgcp.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 	serviceAccount *gcp.ServiceAccount,
 ) (map[string]interface{}, error) {
 	// Determine network names
-	networkName, subNetworkName := getNetworkNames(infraStatus, cp)
+	networkName, subNetworkName := getNetworkNames(shootInfraConfig, infraStatus, cp)
 
 	// Collect config chart values
 	return map[string]interface{}{
@@ -492,12 +499,17 @@ func getControlPlaneShootChartValues(
 
 // getNetworkNames determines the network and sub-network names from the given infrastructure status and controlplane.
 func getNetworkNames(
+	shootInfraConfig *apisgcp.InfrastructureConfig,
 	infraStatus *apisgcp.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 ) (string, string) {
 	networkName := infraStatus.Networks.VPC.Name
 	if networkName == "" {
 		networkName = cp.Namespace
+	}
+
+	if shootInfraConfig.Networks.Internal != nil && shootInfraConfig.Networks.Internal.Name != nil {
+		return networkName, *shootInfraConfig.Networks.Internal.Name
 	}
 
 	subNetworkName := ""

@@ -59,8 +59,10 @@ var _ = Describe("Terraform", func() {
 						Name: "cloudrouter",
 					},
 				},
-				Internal: &internalCIDR,
-				Workers:  "10.1.0.0/16",
+				Internal: &api.Internal{
+					CIDR: &internalCIDR,
+				},
+				Workers: "10.1.0.0/16",
 			},
 		}
 
@@ -72,8 +74,10 @@ var _ = Describe("Terraform", func() {
 						Name: "cloudrouter",
 					},
 				},
-				Internal: &internalCIDR,
-				Workers:  "10.1.0.0/16",
+				Internal: &apiv1alpha1.Internal{
+					CIDR: &internalCIDR,
+				},
+				Workers: "10.1.0.0/16",
 			},
 		}
 
@@ -216,7 +220,9 @@ var _ = Describe("Terraform", func() {
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"workers":  config.Networks.Workers,
-					"internal": config.Networks.Internal,
+					"internal": map[string]interface{}{
+						"cidr": *config.Networks.Internal.CIDR,
+					},
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,
 					},
@@ -253,8 +259,10 @@ var _ = Describe("Terraform", func() {
 						MinPortsPerVM: &minPortsPerVM,
 						NatIPNames:    natIPNamesInput,
 					},
-					Internal: &internalCIDR,
-					Workers:  "10.1.0.0/16",
+					Internal: &api.Internal{
+						CIDR: &internalCIDR,
+					},
+					Workers: "10.1.0.0/16",
 				},
 			}
 
@@ -278,7 +286,9 @@ var _ = Describe("Terraform", func() {
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"workers":  config.Networks.Workers,
-					"internal": config.Networks.Internal,
+					"internal": map[string]interface{}{
+						"cidr": *config.Networks.Internal.CIDR,
+					},
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,
 						"natIPNames":    natIPNamesOutput,
@@ -313,8 +323,10 @@ var _ = Describe("Terraform", func() {
 						FlowSampling:        &flowSampling,
 						Metadata:            &metadata,
 					},
-					Internal: &internalCIDR,
-					Workers:  "10.1.0.0/16",
+					Internal: &api.Internal{
+						CIDR: &internalCIDR,
+					},
+					Workers: "10.1.0.0/16",
 				},
 			}
 
@@ -338,7 +350,9 @@ var _ = Describe("Terraform", func() {
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"workers":  config.Networks.Workers,
-					"internal": config.Networks.Internal,
+					"internal": map[string]interface{}{
+						"cidr": *config.Networks.Internal.CIDR,
+					},
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,
 					},
@@ -378,7 +392,9 @@ var _ = Describe("Terraform", func() {
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"workers":  config.Networks.Workers,
-					"internal": config.Networks.Internal,
+					"internal": map[string]interface{}{
+						"cidr": *config.Networks.Internal.CIDR,
+					},
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,
 					},

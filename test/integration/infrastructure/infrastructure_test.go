@@ -326,9 +326,11 @@ func newProviderConfig(vpc *gcpv1alpha1.VPC) *gcpv1alpha1.InfrastructureConfig {
 			Kind:       "InfrastructureConfig",
 		},
 		Networks: gcpv1alpha1.NetworkConfig{
-			VPC:      vpc,
-			Workers:  "10.250.0.0/19",
-			Internal: pointer.StringPtr("10.250.112.0/22"),
+			VPC:     vpc,
+			Workers: "10.250.0.0/19",
+			Internal: &gcpv1alpha1.Internal{
+				CIDR: pointer.StringPtr("10.250.112.0/22"),
+			},
 			FlowLogs: &gcpv1alpha1.FlowLogs{
 				AggregationInterval: pointer.StringPtr("INTERVAL_5_SEC"),
 				FlowSampling:        pointer.Float32Ptr(0.2),
